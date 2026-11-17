@@ -1,0 +1,39 @@
+---
+title: Materials
+description: Give chart marks a clay or glow finish without changing their values.
+---
+
+import MaterialsExample from "../../../examples/materials/basic";
+
+Set `material` on a series to change how its marks are finished: `"clay"` for soft relief, `"glow"` for light around the marks, or leave it unset for flat paint (`"plain"`). A material changes only the look, never the geometry, values, tooltip or legend.
+
+<Example caption="Both series use the clay finish. Hover a quarter to see its loans.">
+  <MaterialsExample />
+
+  <include cwd lang="tsx">./examples/materials/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Where It Goes
+
+Set `material` on the part that draws the marks:
+
+| Chart | Part |
+| --- | --- |
+| [Line](../charts/line.mdx), [Area](../charts/area.mdx), [Bar](../charts/bar.mdx), [Histogram](../charts/histogram.mdx), [Waterfall](../charts/waterfall.mdx), [Box Plot](../charts/box-plot.mdx), [Scatter](../charts/scatter.mdx) | `.Series` |
+| [Pie](../charts/pie.mdx), [Radar](../charts/radar.mdx), [Radial](../charts/radial.mdx) | `.Series` |
+| [Heatmap](../charts/heatmap.mdx) | `HeatmapChart.Grid` |
+| [Sankey](../charts/sankey.mdx) | `finish` on `SankeyChart.Node` and `SankeyChart.Link` |
+
+Combo charts take it on each of their line, area and bar series. Sankey uses `finish` because its links already have a `material` for their paint: `"solid"` or `"gradient"`.
+
+```tsx
+<SankeyChart.Links render={(props) => <SankeyChart.Link {...props} finish="glow" />} />
+```
+
+### Choosing One
+
+Mix finishes in one chart only when they mean something, like a glowing forecast next to plain actuals. A pie can glow only some slices with `glowCategories`. Glow and clay draw slightly past the marks, so leave a little margin at the edges of the plot. They don't fix contrast: check each series against the background in both light and dark.
+
+A custom `shape`, `fill` or `filter` you pass to a series replaces the built-in finish.

@@ -1,0 +1,4 @@
+{
+  "title": "Building Blocks",
+  "pages": ["chart", "series-config", "legend", "tooltip", "axes-grid", "labels"]
+}

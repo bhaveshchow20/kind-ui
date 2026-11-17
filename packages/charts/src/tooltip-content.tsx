@@ -16,24 +16,40 @@ export const tooltipClassName =
   "py-1.5 px-2 bg-[color:var(--popover,Canvas)] text-[color:var(--popover-foreground,CanvasText)] border border-solid border-[color:var(--border,GrayText)] rounded-[var(--radius,8px)] text-xs leading-4";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
-  /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
+  /** The props your `content` callback receives. Pass them all through. */
   tooltip: UpstreamTooltipContentProps;
+  /**
+   * Shown in place of a `null` or missing value.
+   * @default "No data"
+   */
   missingValue?: ReactNode;
-  /** Formatting-only fraction resolver. Default content retains the raw value alongside it. */
+  /** Shows each value as a percentage of its total next to the raw value. */
   normalizedValue?: NormalizedValue;
-  /** Caller-owned projection status; use the same datum identity selection as BarSeries. */
+  /** Marks a row as projected, like a forecast bar. Use the same test you pass to the bar series. */
   isProjected?: (entry: UpstreamTooltipContentProps["payload"][number]) => boolean;
-  /** Accessible status text appended to projected items. */
+  /**
+   * Text added after a projected row's value.
+   * @default "Projected"
+   */
   projectedLabel?: ReactNode;
-  /** Opt in to decorative rolling digits for finite numeric text values. Default: off. */
+  /** `"shuffle"` rolls the digits of numeric values as they change. Off by default. */
   valueAnimation?: "shuffle";
-  /** Omit the heading; series labels and values remain accessible. */
+  /**
+   * Hides the heading. Series labels and values stay.
+   * @default false
+   */
   hideLabel?: boolean;
-  /** Omit the decorative marker, including a configured icon. */
+  /**
+   * Hides the color marker, including a configured `icon`.
+   * @default false
+   */
   hideIndicator?: boolean;
-  /** Defaults to the existing slim line marker. Configured icons take precedence. */
+  /**
+   * The color marker's shape. A configured `icon` replaces it.
+   * @default "line"
+   */
   indicator?: "dot" | "line" | "dashed";
-  /** Stable metadata/visibility identity for an item, e.g. a pie category payload ID. */
+  /** Returns the config key for a row, when it isn't the row's `dataKey`, like a category ID. */
   itemKey?: (entry: UpstreamTooltipContentProps["payload"][number]) => string;
 };
 

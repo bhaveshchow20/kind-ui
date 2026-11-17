@@ -13,15 +13,17 @@ export type SeriesConfig = Readonly<
   Record<
     string,
     {
-      /** Inferred from the matching key when omitted; explicit text takes precedence. */
+      /** The name the legend and tooltip show. Omit it to derive one from the key: `monthlyVisitors` becomes "Monthly visitors". */
       label?: string;
+      /** A CSS color, an array of gradient stops, or `{ light, dark }` with one of either per color scheme. */
       color: SeriesColor;
-      /** Optional implicit bar paint and built-in legend encoding. */
+      /** A fill pattern for bars and areas, also drawn in the legend swatch. */
       pattern?: FillPattern;
-      /** Decorative glyph shared by built-in legend and tooltip content. */
+      /** A decorative icon shown in place of the color marker in the legend and tooltip. */
       icon?: ComponentType;
-      /** Explicit legend-only native symbol; reuse this value for ScatterSeries.shape. */
+      /** The legend marker's symbol, like `"circle"` or `"triangle"`. Match it to a scatter series' `shape`. */
       legendShape?: NonNullable<ComponentProps<typeof Symbols>["type"]>;
+      /** Formats this series' values in the tooltip. */
       formatValue?: (value: TooltipValueType) => ReactNode;
     }
   >

@@ -1,0 +1,60 @@
+---
+title: Legend
+description: List a chart's series and let readers highlight, hide or show them.
+---
+
+import LegendExample from "../../../examples/legend/basic";
+
+Use `.Legend` to name the series a chart draws, with a marker in each one's color. Every family that draws series from `config` has one, like `LineChart.Legend` or `PieChart.Legend`. It renders as an HTML list next to the plot, and its labels and colors come from [Series Config](./series-config.mdx).
+
+<Example caption="Press a platform in the legend to hide its line, and press it again to bring it back.">
+  <LegendExample />
+
+  <include cwd lang="tsx">./examples/legend/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Highlight or Hide
+
+By default each legend item is a button that highlights its series and dims the rest, without changing the data. Press it again, or press Escape, to clear the highlight.
+
+To hide and show series instead, set `interaction` to `"visibility"` mode on the chart and give it `defaultVisibleSeries`, as in the example, or `visibleSeries` with `onVisibleSeriesChange` to keep the list in your state. Hiding a series keeps the axes and the other series where they were. The legend won't hide the last visible series. The [Chart](./chart.mdx) page covers both modes and their state.
+
+### Keyboard and Screen Readers
+
+Each item is a button, so Tab reaches it and Enter or Space presses it. It's `aria-pressed` while its series is highlighted, or visible in visibility mode, and screen readers hear what changed: "Highlighted Web.", "Highlight cleared.", "Hidden iOS." or "Shown iOS." When pressing would hide the last series, they hear "At least one item must remain visible." The list is named "Chart legend"; pass `aria-label` to change it.
+
+Hovering or focusing an item dims the other series while it lasts. Set `emphasis="none"` on the legend to turn that off.
+
+### Markers
+
+Each item shows a small swatch in its series' color. A series config `icon`, `legendShape` or `pattern` replaces it with that icon, symbol or pattern. Pass `hideIcon` to show swatches for every item.
+
+### Item Content
+
+Pass a function as children to render each item's content yourself. It gets the item's `key`, `label`, `marker`, `visible`, `selected` and the legend's `mode`. The legend still owns the button, so keep the content noninteractive:
+
+```tsx
+<LineChart.Legend>
+  {({ marker, label, visible }) => (
+    <>
+      {marker}
+      {label}
+      {visible ? null : " (hidden)"}
+    </>
+  )}
+</LineChart.Legend>
+```
+
+### Placement
+
+The legend sits below the plot. Set `legendPosition="top"` on the chart to move it, and every other HTML part, above the plot. While the chart is `loading`, the legend hides.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/charts/src/legend.tsx" name="LegendOptions" type='Pick<LegendProps, "hideIcon" | "emphasis" | "children">' />
+
+<Caption>
+  Heatmaps show a color scale with `HeatmapChart.Legend`, and Sankey charts list their nodes with `SankeyChart.Legend`. See [Heatmap](../charts/heatmap.mdx) and [Sankey](../charts/sankey.mdx).
+</Caption>

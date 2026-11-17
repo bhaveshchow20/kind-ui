@@ -1,0 +1,59 @@
+---
+title: Series Config
+description: Give each series a label, a color and a value format in one place.
+---
+
+import SeriesConfigExample from "../../../examples/series-config/basic";
+
+Use a `SeriesConfig` to name and color the series a chart draws. Every family takes one as `config`, and the legend, tooltip and marks all read from it, so a series looks and reads the same everywhere.
+
+<Example caption="Switch the site between light and dark to see each series change color. Hover a week to see its values in terabytes.">
+  <SeriesConfigExample />
+
+  <include cwd lang="tsx">./examples/series-config/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Keys
+
+Each key is the series' identity. A series whose `dataKey` is `"storage"` reads the `storage` entry; a series that reads its value with a function names its entry with `seriesKey`. For pie slices, radial bars and Sankey nodes, the key matches the category or node ID instead. See [Identity](../guides/identity.mdx).
+
+Keys start with a letter and contain only letters, numbers, underscores and hyphens. The legend lists the entries in config order.
+
+### Labels
+
+`label` is the name the legend and tooltip show. Omit it and the chart derives one from the key: `storage` becomes "Storage" and `monthlyVisitors` becomes "Monthly visitors".
+
+### Colors
+
+`color` takes any CSS color, including a CSS variable. Pass an array for gradient stops, spaced evenly along the series, or `{ light, dark }` for one color or gradient per color scheme. The chart picks one with the CSS `light-dark()` function, so set `color-scheme` on the page (or the chart's container) to match your theme.
+
+```tsx
+const config = {
+  revenue: { label: "Revenue", color: "var(--chart-1)" },
+  forecast: { label: "Forecast", color: { light: "#3659b8", dark: "#93b4ff" } },
+} satisfies SeriesConfig;
+```
+
+Each key also sets a `--color-<key>` CSS variable on the chart, the first stop for a gradient, so your own marks and HTML can match. A `fill` or `stroke` you pass to a series, or a `Cell`, wins over the config color.
+
+### Value Format
+
+`formatValue` turns a value into what the tooltip shows, like `"2.4 TB"`. A `formatter` you pass to the tooltip wins over it.
+
+### Markers
+
+Use `icon` to show a component, like an SVG icon, in place of the color marker in the legend and tooltip. Use `legendShape` for a symbol like `"triangle"` in the legend, matching a scatter series' `shape`. Use `pattern` to fill bars and areas with a pattern, which the legend swatch shows too:
+
+```tsx
+const config = {
+  planned: { label: "Planned", color: "#64748b", pattern: { kind: "hatch" } },
+} satisfies SeriesConfig;
+```
+
+`pattern.kind` is `hatch`, `stripe`, `duotone`, `dots` or `lines`. Patterns, shapes and icons give readers a second cue besides color.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/charts/src/types.ts" name="SeriesConfigEntry" type="SeriesConfig[string]" />

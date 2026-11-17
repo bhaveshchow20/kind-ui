@@ -32,15 +32,20 @@ export type TooltipProps = Omit<
   | "reverseDirection"
   | "useTranslate3d"
 > & {
-  /** Ref and native attributes for Kind's measured positioning element. */
+  /** Ref to the element that positions the tooltip. */
   ref?: Ref<HTMLDivElement>;
+  /** Attributes, styles and handlers for the element that positions the tooltip. */
   frameProps?: Omit<ComponentPropsWithRef<"div">, "children" | "ref">;
+  /**
+   * The widest the tooltip grows, in pixels. It never grows wider than the plot.
+   * @default 180
+   */
   maxWidth?: number;
-  /** Resolves category identity before the existing series-key fallback. */
+  /** Returns the config key for a tooltip row, when it isn't the row's `dataKey`, like a category ID. */
   itemKey?: TooltipContentProps["itemKey"];
-  /** Default content only; custom content and explicit formatters retain ownership. */
+  /** Shows each value as a percentage of its total next to the raw value. Applies to the default content only. */
   normalizedValue?: TooltipContentProps["normalizedValue"];
-  /** Opt in on Kind's default content; custom content owns its own animation. */
+  /** `"shuffle"` rolls the digits of numeric values as they change. Applies to the default content only. */
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };
 export type TooltipFrameProps = {

@@ -1,0 +1,39 @@
+---
+title: Troubleshooting
+description: Fix the common problems with installing, sizing and composing charts.
+---
+
+Find the symptom below. If it isn't here, compare your chart with the first example on its [chart page](../charts/line.mdx), which is complete.
+
+## Setup and Sizing
+
+| Symptom | Fix |
+| --- | --- |
+| `@kind-ui/charts` or `motion` doesn't resolve | Install the package with `motion` and `recharts`, as in [Get Started](../index.mdx); Motion is needed even with `animate={false}`. Import from `@kind-ui/charts` only, not its files |
+| `shadcn add` can't find `components.json` | Run `npx shadcn@latest init` first, then add the `@kind-ui` registry |
+| The chart has no styles | Add the `@source` line for the package to the stylesheet that imports Tailwind. Its path is relative to that file: from `src/app/globals.css` it's `../../node_modules/@kind-ui/charts/dist` |
+| A server component can't find `LineChart.XAxis` | Put the chart in a file that starts with `"use client"` |
+| The chart is blank or has no height | Leave `height` at its default, set a number, or give a percentage height a parent with a measured height |
+| The chart pushes its flex or grid layout wider | Give its parent `min-width: 0` |
+| The last x-axis label is cut off | Pass `margin={{ right: 16 }}` to the chart |
+| Series colors don't follow dark mode | Set `color-scheme` on the page, and give the series `{ light, dark }` colors |
+| Two React roots on one page share colors | Give each root its own `identifierPrefix` |
+
+## Composition
+
+| Symptom | Fix |
+| --- | --- |
+| The chart throws "requires aria-label or aria-labelledby" | Name it; see [Accessibility](./accessibility.mdx) |
+| The chart throws "do not nest chart families" | Give each chart its own root, side by side |
+| Nothing draws | Add the parts as children: `config` names series but draws nothing |
+| The legend highlights instead of hiding | Set `interaction` to `"visibility"` mode with `defaultVisibleSeries`; see [Legend](../building-blocks/legend.mdx) |
+| The chart throws about `onVisibleSeriesChange` | Pass `visibleSeries` or `defaultVisibleSeries` with it, but not both |
+| A series has no label, color or legend item | Its `dataKey` or `seriesKey` must match a config key; see [Identity](./identity.mdx) |
+| Colors move when rows are sorted | Give each category a stable ID with `categoryKey`; see [Identity](./identity.mdx) |
+| Arrow keys stay on the hovered point | Move the pointer out of the plot before using the keyboard |
+| A material doesn't show | A custom `shape`, `fill` or `filter` replaces it; see [Materials](./materials.mdx) |
+| The entrance stops early | Hovering or new data finishes it; remount with a new `key` to replay; see [Motion](./motion.mdx) |
+
+## Report a Problem
+
+Open an issue on [GitHub](https://github.com/kind-ui/charts/issues) with the versions of `@kind-ui/charts`, React, Recharts and Motion you have installed, the smallest chart that shows the problem, and what you expected to happen.
