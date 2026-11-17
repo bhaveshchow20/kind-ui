@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/sankey-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -35,10 +35,11 @@ SankeyChart
 │   └── SankeyChart.Link
 ├── SankeyChart.Tooltip
 ├── SankeyChart.Legend
-└── SankeyChart.Table
+├── SankeyChart.Table
+└── SankeyChart.Content
 ```
 
-`SankeyChart` holds the flow data, the node config and the accessible name, and draws only the parts you add. `SankeyChart.Nodes` and `SankeyChart.Links` draw the bars and ribbons; leave one out and it isn't drawn. Give the chart a `height`, since it fills its container's width.
+`SankeyChart` holds the flow data, the node config and the accessible name, and draws only the parts you add. `SankeyChart.Nodes` and `SankeyChart.Links` draw the bars and ribbons; leave one out and it isn't drawn. Give the chart a `height`, since it fills its container's width. `SankeyChart.Content` places your own HTML next to the legend.
 
 ## Usage
 

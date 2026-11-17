@@ -22,7 +22,7 @@ npx shadcn@latest add @kind-ui/radial-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -41,7 +41,7 @@ RadialBarChart
 └── RadialBarChart.Content
 ```
 
-`RadialBarChart` holds the data, the series config and the accessible name, and draws only the parts you add. `RadialBarChart.AngleAxis` sets the scale around the circle, and `RadialBarChart.RadiusAxis` gives each row its own ring. `RadialBarChart.Series` draws the arcs. `RadialBarChart.Labels` writes a row field on each arc, and `RadialBarChart.Label` fits that text along it.
+`RadialBarChart` holds the data, the series config and the accessible name, and draws only the parts you add. `RadialBarChart.AngleAxis` sets the scale around the circle, and `RadialBarChart.RadiusAxis` gives each row its own ring. `RadialBarChart.Series` draws the arcs. `RadialBarChart.Labels` writes a row field on each arc, and `RadialBarChart.Label` fits that text along it. `RadialBarChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
@@ -88,6 +88,10 @@ Series with the same `stackId` share one ring, end to end, like committed and re
 
 ```bash tab="shadcn"
 npx shadcn@latest add @kind-ui/activity-rings
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
 ```
 
 A value past its goal fills the ring and stops; the tooltip still shows the real value, formatted by `config`. Screen readers hear every ring's label and value when the chart gets focus. `ActivityRings.Series` draws the tracks and arcs, and takes `RadialBarChart.Series` props like `cornerRadius`. Add `ActivityRings.Labels` inside it to write each ring's label along its arc.

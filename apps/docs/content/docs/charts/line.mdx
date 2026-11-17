@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/line-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -34,10 +34,11 @@ LineChart
 ├── LineChart.YAxis
 ├── LineChart.Series
 ├── LineChart.Tooltip
-└── LineChart.Legend
+├── LineChart.Legend
+└── LineChart.Content
 ```
 
-`LineChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `LineChart.Series` per line. The tooltip and legend read their labels and colors from `config`.
+`LineChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `LineChart.Series` per line. The tooltip and legend read their labels and colors from `config`. `LineChart.Content` places your own HTML next to the legend.
 
 ## Usage
 

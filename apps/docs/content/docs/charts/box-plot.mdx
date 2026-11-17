@@ -20,7 +20,7 @@ npx shadcn@latest add @kind-ui/box-plot-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -32,11 +32,13 @@ BoxPlotChart
 ├── BoxPlotChart.XAxis
 ├── BoxPlotChart.YAxis
 ├── BoxPlotChart.Series
+│   └── BoxPlotChart.Mark
 ├── BoxPlotChart.Tooltip
-└── BoxPlotChart.Legend
+├── BoxPlotChart.Legend
+└── BoxPlotChart.Content
 ```
 
-`BoxPlotChart` holds the data, the series config and the accessible name, and draws only the parts you add. `BoxPlotChart.Series` draws one box per row: the box spans `q1` to `q3`, the line across it marks the `median`, the whiskers reach `lowerWhisker` and `upperWhisker`, and each outlier is a circle. Its `seriesKey` picks the label and color in `config`.
+`BoxPlotChart` holds the data, the series config and the accessible name, and draws only the parts you add. `BoxPlotChart.Series` draws one box per row: the box spans `q1` to `q3`, the line across it marks the `median`, the whiskers reach `lowerWhisker` and `upperWhisker`, and each outlier is a circle. Its `seriesKey` picks the label and color in `config`. `BoxPlotChart.Mark` draws one box, for a custom `shape`. `BoxPlotChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
@@ -54,6 +56,8 @@ The chart draws statistics you've already computed; it doesn't pick a quartile m
 The values must be finite and in order, from `lowerWhisker` up to `upperWhisker`, and each outlier must lie outside the whiskers, or the chart throws. Equal values are fine: a summary where every value is the same draws a flat line. A `null` summary draws no box but keeps its category on the axis. Set the Y axis `domain` to include your outliers.
 
 `validateBoxPlotSummary` runs the same checks on a summary, and `boxPlotExtent` returns its lowest and highest values, outliers included.
+
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx). To draw the boxes yourself, pass a `shape`; it gets the summary and its screen coordinates, and can render `BoxPlotChart.Mark`.
 
 ### Tooltip
 
@@ -80,8 +84,6 @@ Set `loading` while the data is on its way. The chart keeps its size and shows a
 ```tsx
 <BoxPlotChart loading={isPending} loadingLabel="Loading response times" {...props}>
 ```
-
-Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx). To draw the boxes yourself, pass a `shape`; it gets the summary and its screen coordinates, and can render `BoxPlotChart.Mark`.
 
 ## API Reference
 

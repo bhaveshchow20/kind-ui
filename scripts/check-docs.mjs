@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Serves the docs' static export as a plain file server would (a folder serves its index.html, no rewrites) and
 // opens every page in light, then in dark with reduced motion, failing on any page error or console error, such as a
-// hydration mismatch. Each page's Markdown, the search index and every internal link must also resolve.
+// hydration mismatch. Each page's Markdown, the search index and every internal link, in the pages and in the
+// Markdown, must also resolve.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, join } from "node:path";
@@ -93,6 +94,20 @@ async function check() {
   } finally {
     await browser.close();
     server.close();
+  }
+  // The Markdown keeps authored links, which must point at other Markdown files, not `.mdx` sources.
+  const docsOrigin = process.env.NEXT_PUBLIC_DOCS_ORIGIN ?? "http://localhost:3000";
+  const markdown = [
+    "llms-full.txt",
+    ...readdirSync(join(out, "llms.mdx"), { recursive: true })
+      .filter((file) => file.endsWith(".md"))
+      .map((file) => join("llms.mdx", file)),
+  ];
+  for (const file of markdown) {
+    for (const [, href] of readFileSync(join(out, file), "utf8").matchAll(/\]\(([^)\s]+)\)/g)) {
+      if (/\.mdx(#|$)/.test(href)) errors.push(`/${file}: links to ${href}`);
+      else if (href.startsWith(docsOrigin)) links.add(new URL(href).pathname);
+    }
   }
   for (const link of links) {
     const file = fileFor(link);

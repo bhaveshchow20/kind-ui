@@ -17,7 +17,7 @@ Use `.Tooltip` to show the values at the point a reader hovers or inspects with 
 
 ### Values
 
-The tooltip shows a row for each series at the inspected point, in config order, with the value `formatValue` returns. A missing or `null` value shows "No data", unless every row is missing, in which case no tooltip appears. When a series is dimmed or hidden, its row stays, dimmed. Press Escape to dismiss it.
+The tooltip shows a row for each series at the inspected point, in the order the series are drawn, with the value `formatValue` returns. A missing or `null` value shows "No data", unless every row is missing, in which case no tooltip appears. When a series is dimmed or hidden, its row stays, dimmed. Press Escape to dismiss it.
 
 Pass `valueAnimation="shuffle"` to roll the digits of numeric values as they change. It stays still when the reader prefers reduced motion.
 

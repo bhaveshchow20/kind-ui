@@ -6,9 +6,7 @@
   "commit": false,
   "fixed": [],
   "linked": [],
-  "ignore": [
-    "@kind-ui/charts-docs"
-  ],
+  "ignore": ["@kind-ui/charts-docs"],
   "format": false,
   "updateInternalDependencies": "patch",
   "privatePackages": {

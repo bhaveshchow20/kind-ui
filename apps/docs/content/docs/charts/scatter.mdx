@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/scatter-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -35,18 +35,21 @@ ScatterChart
 ├── ScatterChart.ZAxis
 ├── ScatterChart.Series
 ├── ScatterChart.Tooltip
-└── ScatterChart.Legend
+├── ScatterChart.Legend
+└── ScatterChart.Content
 ```
 
-`ScatterChart` holds the series config and the accessible name, and draws only the parts you add. Unlike the other cartesian charts, each `ScatterChart.Series` takes its own `data`. The tooltip and legend read their labels and colors from `config`.
+`ScatterChart` holds the series config and the accessible name, and draws only the parts you add. Unlike the other cartesian charts, each `ScatterChart.Series` takes its own `data`. The tooltip and legend read their labels and colors from `config`. `ScatterChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
 ### Series and Axes
 
-Both axes are numeric: give each one `type="number"` and the `dataKey` it reads from the points. `name` and `unit` label the value in the tooltip.
+Both axes are numeric. Give each one the `dataKey` it reads from the points; `name` and `unit` label the value in the tooltip.
 
 Add one `ScatterChart.Series` per group, with its points in `data` and its `config` key in `seriesKey`. Set `shape` to tell groups apart without color: `circle` (the default), `cross`, `diamond`, `square`, `star`, `triangle` or `wye`. Give the `config` entry the same `legendShape` so the legend matches.
+
+Set `material="clay"` or `"glow"` on a series for a finish on the built-in shapes; see [Materials](../guides/materials.mdx).
 
 `ScatterChart.Tooltip` titles each point with its series label. Pass `pointLabel` to title it from the point's own record instead, like the task name above.
 
@@ -67,8 +70,6 @@ Recharts draws zero and missing sizes at the smallest area and leaves them out o
 Pressing a legend item highlights its points and dims the others. Press it again, or press Escape, to clear it. To hide and show series from the legend instead, see [Legend](../building-blocks/legend.mdx).
 
 Focus the chart and press the left and right arrow keys to move through the points of the first series, which shows the tooltip, and Escape to dismiss it. Hover reaches every series.
-
-Set `material="clay"` or `"glow"` on a series for a finish on the built-in shapes; see [Materials](../guides/materials.mdx).
 
 ### Motion
 

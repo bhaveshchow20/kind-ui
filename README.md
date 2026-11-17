@@ -67,7 +67,7 @@ Install the Kind UI consumer skill:
 npx skills add kind-ui/charts --skill kind-ui-charts
 ```
 
-Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/ai-agents.mdx), then read the relevant [chart guide](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs/charts). Each chart guide includes example setup files and prompts.
+Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/ai-agents.mdx). The docs site serves each chart page as Markdown at `llms.mdx/docs/charts/<family>.md`, with its example source and API tables. The example source also lives in [`apps/docs/examples/<family>/`](https://github.com/kind-ui/charts/tree/main/apps/docs/examples).
 
 ## Contribute
 

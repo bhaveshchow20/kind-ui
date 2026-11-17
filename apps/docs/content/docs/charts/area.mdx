@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/area-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -34,10 +34,11 @@ AreaChart
 ├── AreaChart.YAxis
 ├── AreaChart.Series
 ├── AreaChart.Tooltip
-└── AreaChart.Legend
+├── AreaChart.Legend
+└── AreaChart.Content
 ```
 
-`AreaChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `AreaChart.Series` per area. The tooltip and legend read their labels and colors from `config`.
+`AreaChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `AreaChart.Series` per area. The tooltip and legend read their labels and colors from `config`. `AreaChart.Content` places your own HTML next to the legend.
 
 ## Usage
 

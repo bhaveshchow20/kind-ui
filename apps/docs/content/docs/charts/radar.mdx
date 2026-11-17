@@ -20,7 +20,7 @@ npx shadcn@latest add @kind-ui/radar-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -36,7 +36,7 @@ RadarChart
 └── RadarChart.Content
 ```
 
-`RadarChart` holds the data, the series config and the accessible name, and draws only the parts you add. `RadarChart.AngleAxis` names the spokes from a row field, `RadarChart.RadiusAxis` sets the scale out from the center, and `RadarChart.Grid` draws the rings behind them. Add one `RadarChart.Series` per profile.
+`RadarChart` holds the data, the series config and the accessible name, and draws only the parts you add. `RadarChart.AngleAxis` names the spokes from a row field, `RadarChart.RadiusAxis` sets the scale out from the center, and `RadarChart.Grid` draws the rings behind them. Add one `RadarChart.Series` per profile. `RadarChart.Content` places your own HTML next to the legend.
 
 ## Usage
 

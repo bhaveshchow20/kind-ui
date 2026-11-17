@@ -29,15 +29,8 @@ export default function LatencyChart() {
       aria-label="Task latency in milliseconds against acceptance rate, weekday and weekend"
     >
       <ScatterChart.Grid />
-      <ScatterChart.XAxis
-        type="number"
-        dataKey="latency"
-        name="Latency"
-        unit=" ms"
-        domain={[0, 100]}
-      />
+      <ScatterChart.XAxis dataKey="latency" name="Latency" unit=" ms" domain={[0, 100]} />
       <ScatterChart.YAxis
-        type="number"
         dataKey="acceptance"
         name="Acceptance"
         unit="%"

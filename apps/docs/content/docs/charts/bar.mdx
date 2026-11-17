@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/bar-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -36,10 +36,11 @@ BarChart
 │   ├── BarChart.Cell
 │   └── BarChart.Labels
 ├── BarChart.Tooltip
-└── BarChart.Legend
+├── BarChart.Legend
+└── BarChart.Content
 ```
 
-`BarChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `BarChart.Series` per measure. `BarChart.Cell` colors a single bar and `BarChart.Labels` writes values on the bars. The tooltip and legend read their labels and colors from `config`.
+`BarChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `BarChart.Series` per measure. `BarChart.Cell` colors a single bar and `BarChart.Labels` writes values on the bars. The tooltip and legend read their labels and colors from `config`. `BarChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
@@ -74,7 +75,7 @@ Set `layout="vertical"` for horizontal bars. The axes swap, so the X axis is the
 
 ### Emphasis
 
-By default, hovering a bar dims the other series. Set `emphasis="category"` to dim the other categories instead, as in the first example, or `"none"` to turn it off. Category emphasis needs a unique category per row and the built-in bar shape; a custom `shape`, range values or per-series `data` turn it off for that chart.
+By default, hovering a bar dims the other series. Set `emphasis="category"` to dim the other categories instead, as in the first example, or `"none"` to turn it off. Category emphasis reads each row's category from the category axis, so those categories must be unique strings. When they aren't, like numbers or repeated labels, pass the series an `emphasisKey` that returns a unique key for each row. A custom `shape`, range values or per-series `data` turn it off for that chart.
 
 ### Legend and Keyboard
 

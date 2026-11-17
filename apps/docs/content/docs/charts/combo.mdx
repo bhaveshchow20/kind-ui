@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/combo-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -34,13 +34,16 @@ ComboChart
 ├── ComboChart.YAxis
 ├── ComboChart.Area
 ├── ComboChart.Bar
+│   ├── ComboChart.Cell
+│   └── ComboChart.Labels
 ├── ComboChart.Line
 ├── ComboChart.Scatter
 ├── ComboChart.Tooltip
-└── ComboChart.Legend
+├── ComboChart.Legend
+└── ComboChart.Content
 ```
 
-`ComboChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `ComboChart.Area`, `ComboChart.Bar`, `ComboChart.Line` or `ComboChart.Scatter` per measure. They share the x-axis, the tooltip and the legend, which read their labels, colors and value formats from `config`.
+`ComboChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `ComboChart.Area`, `ComboChart.Bar`, `ComboChart.Line` or `ComboChart.Scatter` per measure. `ComboChart.Cell` colors a single bar and `ComboChart.Labels` writes values on a series. They share the x-axis, the tooltip and the legend, which read their labels, colors and value formats from `config`. `ComboChart.Content` places your own HTML next to the legend.
 
 ## Usage
 

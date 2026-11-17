@@ -21,7 +21,7 @@ npx shadcn@latest add @kind-ui/heatmap-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -31,10 +31,11 @@ HeatmapChart
 ├── HeatmapChart.Grid
 ├── HeatmapChart.Tooltip
 ├── HeatmapChart.Legend
-└── HeatmapChart.DataTable
+├── HeatmapChart.DataTable
+└── HeatmapChart.Content
 ```
 
-`HeatmapChart` holds the rows, columns, data and color scale, and draws only the parts you add. The grid is an HTML table with a header for each row and column, so screen readers can read it like one. Heatmaps have no series, so pass `config={{}}`.
+`HeatmapChart` holds the rows, columns, data and color scale, and draws only the parts you add. The grid is an HTML table with a header for each row and column, so screen readers can read it like one. Heatmaps have no series, so pass `config={{}}`. `HeatmapChart.Content` places your own HTML next to the legend.
 
 ## Usage
 

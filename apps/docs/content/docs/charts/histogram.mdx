@@ -20,7 +20,7 @@ npx shadcn@latest add @kind-ui/histogram-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -33,10 +33,11 @@ HistogramChart
 ├── HistogramChart.YAxis
 ├── HistogramChart.Series
 ├── HistogramChart.Tooltip
-└── HistogramChart.Legend
+├── HistogramChart.Legend
+└── HistogramChart.Content
 ```
 
-`HistogramChart` holds the bins, the series config and the accessible name, and draws only the parts you add. It owns the scales: the X axis spans the first bin's `lower` to the last bin's `upper`, and the Y axis starts at zero. Add one `HistogramChart.Series`; its label and color come from the `count` entry in `config`.
+`HistogramChart` holds the bins, the series config and the accessible name, and draws only the parts you add. It owns the scales: the X axis spans the first bin's `lower` to the last bin's `upper`, and the Y axis starts at zero. Add one `HistogramChart.Series`; its label and color come from the `count` entry in `config`. `HistogramChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
@@ -60,6 +61,8 @@ const { bins } = binHistogram(responseTimes, [0, 25, 50, 100, 200]);
 <HistogramChart bins={bins} measure="density" {...props}>
 ```
 
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx).
+
 ### Axes
 
 `HistogramChart.XAxis` and `HistogramChart.YAxis` take Recharts' tick and label props, like `ticks`, `tickFormatter` and `label`. Their `dataKey`, `type`, `domain` and `scale` belong to the chart.
@@ -73,8 +76,6 @@ Set `loading` while the data is on its way. The chart keeps its size and shows a
 ```tsx
 <HistogramChart loading={isPending} loadingLabel="Loading response times" {...props}>
 ```
-
-Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx).
 
 ## API Reference
 

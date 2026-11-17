@@ -20,7 +20,7 @@ npx shadcn@latest add @kind-ui/waterfall-chart
 ```
 
 ```bash tab="npm"
-npm install @kind-ui/charts
+npm install @kind-ui/charts motion recharts
 ```
 
 ## Composition
@@ -35,10 +35,11 @@ WaterfallChart
 ├── WaterfallChart.Series
 │   └── WaterfallChart.Labels
 ├── WaterfallChart.Tooltip
-└── WaterfallChart.Legend
+├── WaterfallChart.Legend
+└── WaterfallChart.Content
 ```
 
-`WaterfallChart` holds the rows, the series config and the accessible name, and draws only the parts you add. `WaterfallChart.Series` draws one floating bar per row, and `WaterfallChart.Connectors` draws the dashed lines that join each bar to the next. Add the connectors before the series so the bars sit on top.
+`WaterfallChart` holds the rows, the series config and the accessible name, and draws only the parts you add. `WaterfallChart.Series` draws one floating bar per row, and `WaterfallChart.Connectors` draws the dashed lines that join each bar to the next. Add the connectors before the series so the bars sit on top. `WaterfallChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
@@ -57,6 +58,8 @@ Describe each step as an entry with a unique `id`, a `label` and a `kind`, then 
 
 Set `layout="vertical"` for horizontal bars, with the number scale on `WaterfallChart.XAxis` and the row ids on `WaterfallChart.YAxis`. The connectors follow.
 
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx).
+
 ### Missing Values
 
 A `null` change leaves its bar out and makes the balance unknown, so the bars after it disappear too, until a `"total"` or `"end"` gives a known balance again. The default tooltip skips steps without a bar; pass your own `content` to describe them. A change of `0` keeps its step with a zero-height bar.
@@ -74,8 +77,6 @@ Set `loading` while the data is on its way. The chart keeps its size and shows a
 ```tsx
 <WaterfallChart loading={isPending} loadingLabel="Loading cash flow" {...props}>
 ```
-
-Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx).
 
 ## API Reference
 
